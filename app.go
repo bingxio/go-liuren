@@ -1,5 +1,5 @@
 /*
-   @title      1980 - 2080 年干支、节气（中气获取月将）
+   @title      大六壬神课排盘系统（精确）
    @author     bingxio, 丙杺
    @email      bingxio@qq.com
    @date       2021-10-26 18:40:55
@@ -23,6 +23,10 @@ const (
 
 	TypeA = iota
 	TypeB
+
+	NextGz
+	NextZ
+	NextD
 )
 
 var (
@@ -35,6 +39,9 @@ var (
 	B = []string{"子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"}
 
 	C = []string{"亥", "戌", "酉", "申", "未", "午", "巳", "辰", "卯", "寅", "丑", "子"}
+
+	D = []string{"贵", "腾", "朱", "六", "勾", "青", "空", "白", "常", "玄", "阴", "后"}
+	E = []string{"孙", "父", "兄", "鬼", "财"}
 )
 
 type Data_2080 struct {
@@ -53,13 +60,17 @@ type Data_1980 struct {
 }
 
 type Response struct {
-	Date   string   `json:"date"`
-	GanZhi []string `json:"ganzhi"`
-	Jiang  string   `json:"jiang"`
+	Date string   `json:"date"`
+	Gz   []string `json:"gz"`
+	J    string   `json:"j"`
+	Kw   []string `json:"kw"`
+	Dp   []string `json:"dp"`
+	Js   []string `json:"js"`
+	Tp   []string `json:"tp"`
 }
 
 func (r Response) Stringer() {
-	x := fmt.Sprintf("%s --> %+v %s", r.Date, r.GanZhi, r.Jiang)
+	x := fmt.Sprintf("%s --> %+v %s", r.Date, r.Gz, r.J)
 	fmt.Println(x)
 }
 
@@ -100,16 +111,44 @@ func main() {
 	if err != nil {
 		panic(err)
 	} */
-	e := evaluate("2021-10-27 16:37")
-	e.Stringer()
+
+	t := time.Now().Format("2006-01-02 15:04")
+
+	e := evaluate(t)
+	// e.Stringer()
+	Display(e)
 }
 
-func indexOf(t int, value string) int {
-	p := A
-	if t == TypeB {
-		p = B
+func peekGz(s string, rev bool) string {
+	x := indexOf(A, string([]rune(s)[0]))
+	y := indexOf(B, string([]rune(s)[1]))
+
+	if !rev {
+		x++
+		y++
+
+		if x == 10 {
+			x = 0
+		}
+		if y == 12 {
+			y = 0
+		}
+	} else {
+		x--
+		y--
+
+		if x == -1 {
+			x = 9
+		}
+		if y == -1 {
+			y = 11
+		}
 	}
-	for i, v := range p {
+	return fmt.Sprintf("%s%s", A[x], B[y])
+}
+
+func indexOf(element []string, value string) int {
+	for i, v := range element {
 		if v == value {
 			return i
 		}
@@ -117,18 +156,25 @@ func indexOf(t int, value string) int {
 	panic("unexpected error")
 }
 
-func getJiang(yue string) string {
-	p := 2
-	for i := 0; i < 12; i++ {
-		if B[p] == yue {
-			return C[i]
-		}
-		p++
-		if p == 12 {
-			p = 0
+func getKw(gz string) []string {
+	p := []string{}
+	for {
+		gz = peekGz(gz, false)
+
+		a := string([]rune(gz)[0])
+		b := string([]rune(gz)[1])
+
+		if a == "甲" {
+			p = append(p, b)
+
+			gz = peekGz(gz, false)
+			b = string([]rune(gz)[1])
+
+			p = append(p, b)
+			break
 		}
 	}
-	panic("unexpected error")
+	return p
 }
 
 func hourPeriods(t time.Time) string {
@@ -162,8 +208,129 @@ func hourPeriods(t time.Time) string {
 	panic("unexpected error")
 }
 
-func evaluate(et string) Response {
-	t, _ := time.Parse("2006-01-02 15:04", et)
+func evDp(hz string, j string) []string {
+	dp := []string{}
+
+	i := indexOf(B, j)
+	p := indexOf(B, hz)
+
+	x := i + (12 - p)
+	if x > 12 {
+		x = x - 12
+	}
+	for len(dp) != 12 {
+		if x >= 12 {
+			x = 0
+		}
+		dp = append(dp, B[x])
+		x++
+	}
+	return dp
+}
+
+func evJs(hz string, dg string, dp []string) []string {
+	js := make([]string, 12)
+
+	fmt.Println("日干：", dg, "时支：", hz, dp)
+	var a, b, p int
+
+	switch dg {
+	case "甲", "戊", "庚":
+		a = 1
+		b = 7
+	case "乙", "己":
+		a = 0
+		b = 8
+	case "丙", "丁":
+		a = 11
+		b = 9
+	case "辛":
+		a = 6
+		b = 2
+	case "壬", "癸":
+		a = 5
+		b = 3
+	}
+
+	switch indexOf(B, hz) {
+	case 3, 4, 5, 6, 7, 8:
+		p = a
+	case 9, 10, 11, 0, 1, 2:
+		p = b
+	}
+
+	fmt.Println("贵人：", B[p])
+	var reverse bool
+
+	switch indexOf(dp, B[p]) {
+	case 11, 0, 1, 2, 3, 4:
+		reverse = false
+	case 5, 6, 7, 8, 9, 10:
+		reverse = true
+	}
+
+	i := indexOf(dp, B[p])
+
+	for j := 0; j < 12; j++ {
+		js[i] = D[j]
+
+		if reverse {
+			i--
+		} else {
+			i++
+		}
+		if i == -1 {
+			i = 11
+		}
+		if i == 12 {
+			i = 0
+		}
+	}
+
+	fmt.Println(js)
+	return js
+}
+
+func evTp(dgz string, dp []string) []string {
+	tp := make([]string, 12)
+
+	var xz string
+
+	for {
+		dgz = peekGz(dgz, true)
+
+		a := string([]rune(dgz)[0])
+		b := string([]rune(dgz)[1])
+
+		if a == "甲" {
+			xz = b
+			break
+		}
+	}
+
+	fmt.Println("旬：", "甲"+xz)
+	i := indexOf(dp, xz)
+	j := 0
+
+	for a := 0; a < 12; a++ {
+		tp[i] = A[j]
+
+		j++
+		i++
+		if j == 10 {
+			j = 0
+		}
+		if i == 12 {
+			i = 0
+		}
+	}
+
+	fmt.Println(tp)
+	return tp
+}
+
+func evaluate(date string) Response {
+	t, _ := time.Parse("2006-01-02 15:04", date)
 
 	gz := []string{}
 	jq := []Item_2080{}
@@ -186,26 +353,13 @@ func evaluate(et string) Response {
 			break
 		}
 	}
-
-	next := func(s string) string {
-		x := indexOf(TypeA, string([]rune(s)[0])) + 1
-		y := indexOf(TypeB, string([]rune(s)[1])) + 1
-
-		if x == 10 {
-			x = 0
-		}
-		if y == 12 {
-			y = 0
-		}
-		return fmt.Sprintf("%s%s", A[x], B[y])
-	}
 	pre := gz[2]
 
 	for i := 0; i < int(t.Day())-1; i++ {
-		pre = next(pre)
+		pre = peekGz(pre, false)
 	}
 	if t.After(jqItemA.Date) {
-		gz[1] = next(gz[1])
+		gz[1] = peekGz(gz[1], false)
 	}
 	gz[2] = pre
 
@@ -223,29 +377,48 @@ func evaluate(et string) Response {
 		h = "壬子"
 	}
 	for i := 0; i < 12; i++ {
-		h = next(h)
+		h = peekGz(h, false)
+		end := string([]rune(h)[1])
 
-		if hourPeriods(t) == string([]rune(h)[1]) {
+		if hourPeriods(t) == end {
+			if end == "子" {
+				gz[2] = peekGz(gz[2], false)
+			}
 			break
 		}
 	}
 	gz = append(gz, h)
 
-	j := getJiang(string([]rune(gz[1])[1]))
+	var j string
+	p := 2
+	for i := 0; i < 12; i++ {
+		if B[p] == string([]rune(gz[1])[1]) {
+			j = C[i]
+		}
+		p++
+		if p == 12 {
+			p = 0
+		}
+	}
 
 	if t.Before(jqItemB.Date) {
-		tp := indexOf(TypeB, j)
+		tp := indexOf(B, j)
 		tp++
 		if tp == 12 {
 			tp = 0
 		}
 		j = B[tp]
 	}
-	return Response{
-		Date:   et,
-		GanZhi: gz,
-		Jiang:  j,
-	}
+
+	hz := string([]rune(gz[3])[1])
+	dg := string([]rune(gz[2])[0])
+
+	kw := getKw(gz[2])
+	dp := evDp(hz, j)
+	js := evJs(hz, dg, dp)
+	tp := evTp(gz[2], dp)
+
+	return Response{date, gz, j, kw, dp, js, tp}
 }
 
 func rfile_2080() ([]Data_2080, error) {
