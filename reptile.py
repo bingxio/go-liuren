@@ -6,9 +6,9 @@
 """
 
 from typing import List, Tuple
-import requests as rq
-
 from bs4 import BeautifulSoup
+
+import requests as rq
 
 URL = "http://jieqi.ttcha.net/"
 YEAR = 1980

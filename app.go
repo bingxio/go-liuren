@@ -1,17 +1,15 @@
 /*
-	@title      1980 - 2080 年干支、节气（中气获取月将）
-    @author     bingxio, 丙杺
-    @email      bingxio@qq.com
-    @date       2021-10-26 18:40:55
+   @title      1980 - 2080 年干支、节气（中气获取月将）
+   @author     bingxio, 丙杺
+   @email      bingxio@qq.com
+   @date       2021-10-26 18:40:55
 */
 package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -37,54 +35,16 @@ var (
 	B = []string{"子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"}
 
 	C = []string{"亥", "戌", "酉", "申", "未", "午", "巳", "辰", "卯", "寅", "丑", "子"}
-
-	D = map[int]string{
-		23: B[0],
-		0:  B[0],
-
-		1: B[1],
-		2: B[1],
-
-		3: B[2],
-		4: B[2],
-
-		5: B[3],
-		6: B[3],
-
-		7: B[4],
-		8: B[4],
-
-		9:  B[5],
-		10: B[5],
-
-		11: B[6],
-		12: B[6],
-
-		13: B[7],
-		14: B[7],
-
-		15: B[8],
-		16: B[8],
-
-		17: B[9],
-		18: B[9],
-
-		19: B[10],
-		20: B[10],
-
-		21: B[11],
-		22: B[11],
-	}
 )
-
-type Item_2080 struct {
-	Name string
-	Date time.Time
-}
 
 type Data_2080 struct {
 	Year  string
 	JieQi []Item_2080
+}
+
+type Item_2080 struct {
+	Name string
+	Date time.Time
 }
 
 type Data_1980 struct {
@@ -116,7 +76,7 @@ func main() {
 	}
 	Data1980 = b
 
-	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
+	/* http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		dt := r.URL.Query().Get("dt")
 
 		if dt == "" {
@@ -139,21 +99,19 @@ func main() {
 	err = http.ListenAndServe(PORT, nil)
 	if err != nil {
 		panic(err)
-	}
+	} */
+	e := evaluate("2021-10-27 16:37")
+	e.Stringer()
 }
 
 func indexOf(t int, value string) int {
-	if t == TypeA {
-		for i, v := range A {
-			if v == value {
-				return i
-			}
-		}
-	} else {
-		for i, v := range B {
-			if v == value {
-				return i
-			}
+	p := A
+	if t == TypeB {
+		p = B
+	}
+	for i, v := range p {
+		if v == value {
+			return i
 		}
 	}
 	panic("unexpected error")
@@ -175,10 +133,31 @@ func getJiang(yue string) string {
 
 func hourPeriods(t time.Time) string {
 	h := t.Hour()
-	for k, v := range D {
-		if k == h {
-			return v
-		}
+	switch h {
+	case 23, 0:
+		return B[0]
+	case 1, 2:
+		return B[1]
+	case 3, 4:
+		return B[2]
+	case 5, 6:
+		return B[3]
+	case 7, 8:
+		return B[4]
+	case 9, 10:
+		return B[5]
+	case 11, 12:
+		return B[6]
+	case 13, 14:
+		return B[7]
+	case 15, 16:
+		return B[8]
+	case 17, 18:
+		return B[9]
+	case 19, 20:
+		return B[10]
+	case 21, 22:
+		return B[11]
 	}
 	panic("unexpected error")
 }
@@ -262,13 +241,11 @@ func evaluate(et string) Response {
 		}
 		j = B[tp]
 	}
-
-	rp := Response{
+	return Response{
 		Date:   et,
 		GanZhi: gz,
 		Jiang:  j,
 	}
-	return rp
 }
 
 func rfile_2080() ([]Data_2080, error) {
