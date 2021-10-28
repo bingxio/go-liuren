@@ -20,13 +20,6 @@ const (
 	File_1980 = "1980.txt"
 
 	PORT = ":8080"
-
-	TypeA = iota
-	TypeB
-
-	NextGz
-	NextZ
-	NextD
 )
 
 var (
@@ -59,14 +52,22 @@ type Data_1980 struct {
 	Item [][]string
 }
 
+type Class struct {
+	A []string `json:"a"`
+	B []string `json:"b"`
+	C []string `json:"c"`
+	D []string `json:"d"`
+}
+
 type Response struct {
-	Date string   `json:"date"`
-	Gz   []string `json:"gz"`
-	J    string   `json:"j"`
-	Kw   []string `json:"kw"`
-	Dp   []string `json:"dp"`
-	Js   []string `json:"js"`
-	Tp   []string `json:"tp"`
+	Date  string   `json:"date"`
+	Gz    []string `json:"gz"`
+	J     string   `json:"j"`
+	Kw    []string `json:"kw"`
+	Dp    []string `json:"dp"`
+	Js    []string `json:"js"`
+	Tp    []string `json:"tp"`
+	Class Class    `json:"class"`
 }
 
 func (r Response) Stringer() {
@@ -329,6 +330,57 @@ func evTp(dgz string, dp []string) []string {
 	return tp
 }
 
+func evClass(dgz string, dp []string, js []string, tp []string) Class {
+	a := make([]string, 4)
+	b := make([]string, 4)
+	c := make([]string, 4)
+	d := make([]string, 4)
+
+	d[1] = string([]rune(dgz)[1])
+	d[3] = string([]rune(dgz)[0])
+
+	var i int
+
+	switch d[3] {
+	case "甲":
+		i = 2
+	case "乙":
+		i = 4
+	case "丙", "戊":
+		i = 5
+	case "丁", "己":
+		i = 7
+	case "庚":
+		i = 8
+	case "辛":
+		i = 10
+	case "癸":
+		i = 1
+	}
+
+	d[2] = dp[i]
+	c[3] = dp[i]
+
+	i = indexOf(B, dp[i])
+	c[2] = dp[i]
+
+	i = indexOf(B, string([]rune(dgz)[1]))
+	d[0] = dp[i]
+	c[1] = dp[i]
+
+	i = indexOf(B, dp[i])
+	c[0] = dp[i]
+
+	for j := 0; j < 4; j++ {
+		i = indexOf(dp, c[j])
+		b[j] = js[i]
+		a[j] = tp[i]
+	}
+
+	fmt.Println(a, b, c, d)
+	return Class{a, b, c, d}
+}
+
 func evaluate(date string) Response {
 	t, _ := time.Parse("2006-01-02 15:04", date)
 
@@ -417,8 +469,9 @@ func evaluate(date string) Response {
 	dp := evDp(hz, j)
 	js := evJs(hz, dg, dp)
 	tp := evTp(gz[2], dp)
+	cl := evClass(gz[2], dp, js, tp)
 
-	return Response{date, gz, j, kw, dp, js, tp}
+	return Response{date, gz, j, kw, dp, js, tp, cl}
 }
 
 func rfile_2080() ([]Data_2080, error) {
