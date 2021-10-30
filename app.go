@@ -354,6 +354,8 @@ func evClass(dgz string, dp []string, js []string, tp []string) Class {
 		i = 8
 	case "辛":
 		i = 10
+	case "壬":
+		i = 11
 	case "癸":
 		i = 1
 	}
@@ -429,14 +431,13 @@ func evaluate(date string) Response {
 		h = "壬子"
 	}
 	for i := 0; i < 12; i++ {
-		h = peekGz(h, false)
-		end := string([]rune(h)[1])
-
-		if hourPeriods(t) == end {
-			if end == "子" {
+		if hourPeriods(t) == string([]rune(h)[1]) {
+			if t.Hour() == 23 {
 				gz[2] = peekGz(gz[2], false)
 			}
 			break
+		} else {
+			h = peekGz(h, false)
 		}
 	}
 	gz = append(gz, h)
