@@ -383,7 +383,7 @@ func evClass(dgz string, dp []string, js []string, tp []string) Class {
 	return Class{a, b, c, d}
 }
 
-func evaluate(date string) Response {
+func EvalGZ(date string) ([]string, Item_2080, Item_2080) {
 	t, _ := time.Parse("2006-01-02 15:04", date)
 
 	gz := []string{}
@@ -441,6 +441,13 @@ func evaluate(date string) Response {
 		}
 	}
 	gz = append(gz, h)
+
+	return gz, jqItemA, jqItemB
+}
+
+func evaluate(date string) Response {
+	t, _ := time.Parse("2006-01-02 15:04", date)
+	gz, _, jqItemB := EvalGZ(date)
 
 	var j string
 	p := 2

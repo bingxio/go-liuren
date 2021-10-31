@@ -16,7 +16,7 @@ YEAR = 1980
 FILE = open("2080.txt", "w")
 
 
-def wfile(result):
+def wfile(result) -> None:
     for i in result:
         FILE.write("%s %s\n" % (i[0], i[1]))
     FILE.write("\n")
