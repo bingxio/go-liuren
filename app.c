@@ -63,12 +63,11 @@ date *parse_input(char *d) {
     char c = d[i];
 
     if (c == ' ' || c == '\0') {
-      // printf("--> %s\n", tp);
-
       int trans = atoi(tp);
       if (trans == 0) {
         panic("请输入十进制整数");
       }
+      
       switch (status) {
         case 0:
           pd->year = trans;
@@ -86,6 +85,7 @@ date *parse_input(char *d) {
       status++;
       memset(tp, 0, 4);
       j = 0;
+      
       if (c == '\0') {
         break;
       }
@@ -118,9 +118,6 @@ jq *parse_2080(date *dp) {
     month[1] = line[13];
     month[2] = '\0';
 
-    // printf("%s", line);
-    // printf("--> %s %s | \n\n", year, month);
-
     if (atoi(year) == dp->year &&
         atoi(month) == dp->month) {
           break;
@@ -130,7 +127,7 @@ jq *parse_2080(date *dp) {
     panic("检查日期是否合法");
   }
   jq *q = malloc(sizeof(jq));
-  printf("%s", line);
+  // printf("--> %s", line);
 
   char day[3];
   char hour[3];
@@ -143,7 +140,6 @@ jq *parse_2080(date *dp) {
   hour[1] = line[19];
   hour[2] = '\0';
 
-  printf("%s %s\n", day, hour);
   q->day = atoi(day);
   q->hour = atoi(hour);
 
@@ -152,12 +148,24 @@ jq *parse_2080(date *dp) {
 }
 
 uint8_t index_of(type t, char *w) {
-  switch (t) {
-    case TA:
-      break;
-    case TB:
-      break;
+  const char **arr = NULL;
+  int len;
+
+  if (t == TA) {
+    arr = A;
+    len = 10;
   }
+  if (t == TB) {
+    arr = B;
+    len = 12;
+  }
+
+  for (int i = 0; i < len; i++) {
+    if (strcmp(arr[i], w) == 0) {
+      return i;
+    }
+  }
+  panic("未知符号");
 }
 
 gz *parse_1980(date *dp) {
@@ -178,37 +186,190 @@ gz *parse_1980(date *dp) {
     year[4] = '\0';
 
     if (atoi(year) == dp->year) {
-      for (int i = 0; i < 12; i++) {
+      for (int i = 1; i <= 12 && i != dp->month; i++) {
         fgets(line, 100, fp_1980);
-
-        if (i + 1 == dp->month) {
-          break;
-        }
       }
       break;
     }
   }
-
-  printf("%s", line);
+  // printf("--> %s", line);
 
   gz *g = malloc(sizeof(gz));
-  int status;
-  char item[5];
+  int status = 1, left = 1;
 
-  item[0] = line[5];
-  item[1] = line[6];
+  for (int i = 0, j = 5; i < 6; i++) {
+    char pp[4] = {};
+    strncpy(pp, line + j, 3);
 
-  item[2] = line[7];
-  item[3] = line[8];
+    uint8_t *arr = NULL;
 
-  item[4] = '\0';
+    switch (status) {
+      case 1:
+        arr = g->g1;
+        break;
+      case 2:
+        arr = g->g2;
+        break;
+      case 3:
+        arr = g->g3;
+        break;
+    }
 
-  printf("%s\n", item);
+    if (left) {
+      arr[0] = index_of(TA, pp);
+      left = 0;
+    } else {
+      arr[1] = index_of(TB, pp);
+      left = 1;
+      status++;
+    }
+    memset(pp, 0, 4);
 
-  // for (int i = 0; i < 4; i++) {
+    if (i % 2 == 0) {
+      j += 3;
+    } else {
+      j += 4;
+    }
+  }
 
-  // }
   return g;
+}
+
+void peek_gz(uint8_t *kv) {
+  kv[0]++;
+  kv[1]++;
+
+  uint8_t a = kv[0];
+  uint8_t b = kv[1];
+
+  if (a == 10) {
+    kv[0] = 0;
+  }
+  if (b == 12) {
+    kv[1] = 0;
+  }
+}
+
+char *printer(uint8_t *kv) {
+  char *con = malloc(20);
+  sprintf(con, "%s%s", A[kv[0]], B[kv[1]]);
+  return con;
+}
+
+env *eval(date *dp, jq *q, gz *g, uint8_t p) {
+  if (dp->day >= q->day && dp->hour >= q->hour) {
+    peek_gz(g->g2);
+  }
+  for (int i = 1; i != dp->day; i++) {
+    peek_gz(g->g3);
+  }
+  if (dp->hour == 23) {
+    peek_gz(g->g3);
+  }
+
+  int hp;
+  switch (dp->hour) {
+    case 23:
+    case 24:  hp = 0;
+      break;
+    case 1:
+    case 2:
+              hp = 1;
+      break;
+    case 3:
+    case 4:
+              hp = 2;
+      break;
+    case 5:
+    case 6:
+              hp = 3;
+      break;
+    case 7:
+    case 8:
+              hp = 4;
+      break;
+    case 9:
+    case 10:
+              hp = 5;
+      break;
+    case 11:
+    case 12:
+              hp = 6;
+      break;
+    case 13:
+    case 14:
+              hp = 7;
+      break;
+    case 15:
+    case 16:
+              hp = 8;
+      break;
+    case 17:
+    case 18:
+              hp = 9;
+      break;
+    case 19:
+    case 20:
+              hp = 10;
+      break;
+    case 21:
+    case 22:
+              hp = 11;
+      break;
+  }
+
+  uint8_t gp;
+  switch (g->g3[0]) {
+    case 0:
+    case 5:
+              gp = 0;
+      break;
+    case 1:
+    case 6:
+              gp = 2;
+      break;
+    case 2:
+    case 7:
+              gp = 4;
+      break;
+    case 3:
+    case 8:
+              gp = 6;
+      break;
+    case 4:
+    case 9:
+              gp = 8;
+      break;
+  }
+
+  uint8_t arr[2];
+  arr[0] = gp;
+  arr[1] = 0;
+
+  for (int i = 0; i < 12 && arr[1] != hp; i++) {
+    peek_gz(arr);
+  }
+
+  g->g4[0] = arr[0];
+  g->g4[1] = arr[1];
+
+  env *e = malloc(sizeof(env));
+
+  char *date = malloc(128);
+  sprintf(date, "%s %s %s %s",
+    printer(g->g1),
+    printer(g->g2),
+    printer(g->g3),
+    printer(g->g4)
+  );
+  e->date = date;
+
+  e->i1 = g->g3[0];
+  e->i2 = g->g3[1];
+  e->i3 = g->g4[0];
+  e->i4 = p;
+
+  return e;
 }
 
 int main(int argc, char **argv) {
@@ -218,13 +379,36 @@ int main(int argc, char **argv) {
   scanf("%[^\n]", input_date);
   getchar();
 
+  printf("请输入 1 - 12 之间的一个数字\t:\t");
+
+  char *df = malloc(5);
+  scanf("%[^\n]", df);
+  getchar();
+
+  uint8_t p = (uint8_t)atoi(df);
+  if (p == 0) {
+    panic("请输入整数");
+  }
+
   date *d = parse_input(input_date);
-  printf("%d 年 %d 月 %d 日 %d 时\n",
-    d->year, d->month, d->day, d->hour);
 
   jq *q = parse_2080(d);
   gz *g = parse_1980(d);
 
-  env *e = malloc(sizeof(env));
-  printf("%d\n", e == NULL);
+  env *e = eval(d, q, g, p);
+
+  printf("\
+干支：%s\n\
+局时：\n\
+\
+              %s\n\
+            %s%s\n\
+              %s\n\
+",
+    e->date,
+    A[e->i3],
+    A[e->i1],
+    B[e->i2],
+    B[e->i4]
+  );
 }
