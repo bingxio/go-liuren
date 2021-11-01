@@ -65,7 +65,7 @@ void panic(const char *m) {
 }
 
 date *parse_input(char *d) {
-  char *tp = malloc(sizeof(char) * 4);
+  char *tp = malloc(5);
   date *pd = malloc(sizeof(date));
 
   uint8_t status = 0;
@@ -94,9 +94,9 @@ date *parse_input(char *d) {
           break;
       }
       status++;
-      memset(tp, 0, 4);
+      memset(tp, 0, 5);
       j = 0;
-      
+
       if (c == '\0') {
         break;
       }
@@ -104,6 +104,8 @@ date *parse_input(char *d) {
       tp[j++] = c;
     }
   }
+
+  free(tp);
   return pd;
 }
 
@@ -378,6 +380,10 @@ int main(int argc, char **argv) {
     A[e->i3],
     A[e->i1],
     B[e->i2],
-    B[e->i4]
+    B[e->i4 - 1]
   );
+  free(e->date);
+
+  free(input_date);
+  free(df);
 }
