@@ -9,12 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *A[] = {
+static const char *A[] = {
   "甲", "乙", "丙", "丁", "戊",
   "己", "庚", "辛", "壬", "癸"
 };
 
-const char *B[] = {
+static const char *B[] = {
   "子", "丑", "寅", "卯", "辰", "巳",
   "午", "未", "申", "酉", "戌", "亥"
 };
@@ -47,6 +47,17 @@ typedef struct {
   uint8_t g3[2];
   uint8_t g4[2];
 } gz;
+
+typedef struct {
+  uint8_t h1, h2;
+} hp_map;
+
+static const hp_map hplist[] = {
+  {23, 24}, {1,  2 }, {3,  4 },
+  {5,  6 }, {7,  8 }, {9,  10},
+  {11, 12}, {13, 14}, {15, 16},
+  {17, 18}, {19, 20}, {21, 22},
+};
 
 void panic(const char *m) {
   printf("%s\n", m);
@@ -267,55 +278,13 @@ env *eval(date *dp, jq *q, gz *g, uint8_t p) {
     peek_gz(g->g3);
   }
 
-  int hp;
-  switch (dp->hour) {
-    case 23:
-    case 24:  hp = 0;
+  int hp = 0;
+  for (; hp < 12; hp++) {
+    hp_map m = hplist[hp];
+
+    if (dp->hour == m.h1 || dp->hour == m.h2) {
       break;
-    case 1:
-    case 2:
-              hp = 1;
-      break;
-    case 3:
-    case 4:
-              hp = 2;
-      break;
-    case 5:
-    case 6:
-              hp = 3;
-      break;
-    case 7:
-    case 8:
-              hp = 4;
-      break;
-    case 9:
-    case 10:
-              hp = 5;
-      break;
-    case 11:
-    case 12:
-              hp = 6;
-      break;
-    case 13:
-    case 14:
-              hp = 7;
-      break;
-    case 15:
-    case 16:
-              hp = 8;
-      break;
-    case 17:
-    case 18:
-              hp = 9;
-      break;
-    case 19:
-    case 20:
-              hp = 10;
-      break;
-    case 21:
-    case 22:
-              hp = 11;
-      break;
+    }
   }
 
   uint8_t gp;
@@ -373,7 +342,7 @@ env *eval(date *dp, jq *q, gz *g, uint8_t p) {
 }
 
 int main(int argc, char **argv) {
-  printf("年月日时 yyyy MM dd hh\t:\t");
+  printf("年月日时 yyyy MM dd hh\t\t:\t");
 
   char *input_date = malloc(128);
   scanf("%[^\n]", input_date);
