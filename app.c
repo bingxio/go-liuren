@@ -1,23 +1,19 @@
 /*
   小干时局，排盘系统
   丙杺著于，辛丑年秋
-  
+
   bingxio@qq.com
 */
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static const char *A[] = {
-  "甲", "乙", "丙", "丁", "戊",
-  "己", "庚", "辛", "壬", "癸"
-};
+static const char *A[] = {"甲", "乙", "丙", "丁", "戊",
+                          "己", "庚", "辛", "壬", "癸"};
 
-static const char *B[] = {
-  "子", "丑", "寅", "卯", "辰", "巳",
-  "午", "未", "申", "酉", "戌", "亥"
-};
+static const char *B[] = {"子", "丑", "寅", "卯", "辰", "巳",
+                          "午", "未", "申", "酉", "戌", "亥"};
 
 FILE *fp_2080 = NULL;
 FILE *fp_1980 = NULL;
@@ -38,7 +34,7 @@ typedef struct {
 
 typedef struct {
   int day;
-  int hour;  
+  int hour;
 } jq;
 
 typedef struct {
@@ -53,10 +49,8 @@ typedef struct {
 } hp_map;
 
 static const hp_map hplist[] = {
-  {23, 24}, {1,  2 }, {3,  4 },
-  {5,  6 }, {7,  8 }, {9,  10},
-  {11, 12}, {13, 14}, {15, 16},
-  {17, 18}, {19, 20}, {21, 22},
+    {23, 24}, {1, 2},   {3, 4},   {5, 6},   {7, 8},   {9, 10},
+    {11, 12}, {13, 14}, {15, 16}, {17, 18}, {19, 20}, {21, 22},
 };
 
 void panic(const char *m) {
@@ -78,20 +72,20 @@ date *parse_input(char *d) {
       if (trans == 0) {
         panic("请输入十进制整数");
       }
-      
+
       switch (status) {
-        case 0:
-          pd->year = trans;
-          break;
-        case 1:
-          pd->month = trans;
-          break;
-        case 2:
-          pd->day = trans;
-          break;
-        case 3:
-          pd->hour = trans;
-          break;
+      case 0:
+        pd->year = trans;
+        break;
+      case 1:
+        pd->month = trans;
+        break;
+      case 2:
+        pd->day = trans;
+        break;
+      case 3:
+        pd->hour = trans;
+        break;
       }
       status++;
       memset(tp, 0, 5);
@@ -131,9 +125,8 @@ jq *parse_2080(date *dp) {
     month[1] = line[13];
     month[2] = '\0';
 
-    if (atoi(year) == dp->year &&
-        atoi(month) == dp->month) {
-          break;
+    if (atoi(year) == dp->year && atoi(month) == dp->month) {
+      break;
     }
   }
   if (feof(fp_2080)) {
@@ -217,15 +210,15 @@ gz *parse_1980(date *dp) {
     uint8_t *arr = NULL;
 
     switch (status) {
-      case 1:
-        arr = g->g1;
-        break;
-      case 2:
-        arr = g->g2;
-        break;
-      case 3:
-        arr = g->g3;
-        break;
+    case 1:
+      arr = g->g1;
+      break;
+    case 2:
+      arr = g->g2;
+      break;
+    case 3:
+      arr = g->g3;
+      break;
     }
 
     if (left) {
@@ -291,26 +284,26 @@ env *eval(date *dp, jq *q, gz *g, uint8_t p) {
 
   uint8_t gp;
   switch (g->g3[0]) {
-    case 0:
-    case 5:
-              gp = 0;
-      break;
-    case 1:
-    case 6:
-              gp = 2;
-      break;
-    case 2:
-    case 7:
-              gp = 4;
-      break;
-    case 3:
-    case 8:
-              gp = 6;
-      break;
-    case 4:
-    case 9:
-              gp = 8;
-      break;
+  case 0:
+  case 5:
+    gp = 0;
+    break;
+  case 1:
+  case 6:
+    gp = 2;
+    break;
+  case 2:
+  case 7:
+    gp = 4;
+    break;
+  case 3:
+  case 8:
+    gp = 6;
+    break;
+  case 4:
+  case 9:
+    gp = 8;
+    break;
   }
 
   uint8_t arr[2];
@@ -336,12 +329,8 @@ env *eval(date *dp, jq *q, gz *g, uint8_t p) {
   env *e = malloc(sizeof(env));
 
   char *date = malloc(128);
-  sprintf(date, "%s %s %s %s",
-    printer(g->g1),
-    printer(g->g2),
-    printer(g->g3),
-    printer(g->g4)
-  );
+  sprintf(date, "%s %s %s %s", printer(g->g1), printer(g->g2), printer(g->g3),
+          printer(g->g4));
   e->date = date;
 
   uint8_t hdex = 5;
@@ -407,12 +396,7 @@ int main(int argc, char **argv) {
              %s%s                       小干时局（排盘工具）\n\
                %s\n\
 ",
-    e->date,
-    A[e->i1],
-    A[e->i2],
-    B[e->i3],
-    B[e->i4]
-  );
+         e->date, A[e->i1], A[e->i2], B[e->i3], B[e->i4]);
   free(e->date);
 
   free(input_date);
