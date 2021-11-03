@@ -324,6 +324,15 @@ env *eval(date *dp, jq *q, gz *g, uint8_t p) {
   g->g4[0] = arr[0];
   g->g4[1] = arr[1];
 
+  arr[0] = gp;
+  arr[1] = 0;
+
+  for (int i = 0; i < 12 && arr[1] != p; i++) {
+    peek_gz(arr);
+  }
+
+  uint8_t i3 = arr[0];
+
   env *e = malloc(sizeof(env));
 
   char *date = malloc(128);
@@ -335,26 +344,48 @@ env *eval(date *dp, jq *q, gz *g, uint8_t p) {
   );
   e->date = date;
 
-  e->i1 = g->g3[0];
-  e->i2 = g->g3[1];
-  e->i3 = g->g4[0];
-  e->i4 = p;
+  uint8_t hdex = 5;
+  for (int i = 0; i < 10 && g->g4[0] != i; i++) {
+    hdex++;
+    if (hdex == 10) {
+      hdex = 0;
+    }
+  }
+
+  e->i1 = hdex;
+  e->i2 = i3;
+  e->i3 = p;
+  e->i4 = g->g4[1];
 
   return e;
 }
 
 int main(int argc, char **argv) {
-  printf("年月日时 yyyy MM dd hh\t\t:\t");
-
   char *input_date = malloc(128);
-  scanf("%[^\n]", input_date);
-  getchar();
-
-  printf("请输入 1 - 12 之间的一个数字\t:\t");
-
   char *df = malloc(5);
-  scanf("%[^\n]", df);
-  getchar();
+
+  if (argc == 6) {
+    memset(input_date, 0, 128);
+
+    for (int i = 1; i <= 4; i++) {
+      strcat(input_date, argv[i]);
+
+      if (i + 1 != 5) {
+        strcat(input_date, " ");
+      }
+    }
+    memcpy(df, argv[5], 5);
+  } else {
+    printf("年月日时 yyyy MM dd hh\t\t:\t");
+
+    scanf("%[^\n]", input_date);
+    getchar();
+
+    printf("请输入 1 - 12 之间的一个数字\t:\t");
+
+    scanf("%[^\n]", df);
+    getchar();
+  }
 
   uint8_t p = (uint8_t)atoi(df);
   if (p == 0) {
@@ -366,21 +397,21 @@ int main(int argc, char **argv) {
   jq *q = parse_2080(d);
   gz *g = parse_1980(d);
 
-  env *e = eval(d, q, g, p);
+  env *e = eval(d, q, g, p - 1);
 
   printf("\
 干支：%s\n\
 局时：\n\
 \
-              %s\n\
-            %s%s\n\
-              %s\n\
+               %s\n\
+             %s%s                       小干时局（排盘工具）\n\
+               %s\n\
 ",
     e->date,
-    A[e->i3],
     A[e->i1],
-    B[e->i2],
-    B[e->i4 - 1]
+    A[e->i2],
+    B[e->i3],
+    B[e->i4]
   );
   free(e->date);
 
