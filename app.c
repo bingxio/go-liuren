@@ -4,10 +4,14 @@
 
   bingxio@qq.com
 */
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 static const char *A[] = {
     "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"};
@@ -19,11 +23,6 @@ FILE *fp_2080 = NULL;
 FILE *fp_1980 = NULL;
 
 typedef enum { TA, TB } type;
-
-typedef struct {
-    char *date;
-    uint8_t i1, i2, i3, i4;
-} env;
 
 typedef struct {
     int year;
@@ -43,6 +42,13 @@ typedef struct {
     uint8_t g3[2];
     uint8_t g4[2];
 } gz;
+
+typedef struct {
+    char *date;
+    uint8_t i1, i2, i3, i4;
+    gz *gz;
+    uint8_t k1, k2;
+} env;
 
 typedef struct {
     uint8_t h1, h2;
@@ -356,14 +362,93 @@ env *eval(date *dp, jq *q, gz *g, uint8_t p) {
     e->i3 = p;
     e->i4 = g->g4[1];
 
+    if (g->g3[0] == 9) {
+        if (g->g3[1] == 11) {
+            e->k1 = 0;
+            e->k2 = 1;
+        } else {
+            e->k1 = g->g3[1] + 1;
+            e->k2 = g->g3[1] + 2;
+        }
+    } else {
+        uint8_t a = g->g3[0];
+        uint8_t b = g->g3[1];
+
+        while (a != 9) {
+            a++;
+            b++;
+
+            if (b == 12) {
+                b = 0;
+            }
+        }
+        if (b == 11) {
+            e->k1 = 0;
+            e->k2 = 1;
+        }
+    }
+
     return e;
 }
 
+void save(env *e, char *name) {
+    char file_name[20] = {};
+
+    struct stat filestat;
+
+    if (stat("./tmp", &filestat) != 0) {
+        system("mkdir tmp");
+    }
+
+    sprintf(file_name, "./tmp/%s.json", name);
+
+    FILE *jp = fopen(file_name, "w");
+
+    char y[10];
+    sprintf(y, "%s%s", A[e->gz->g1[0]], B[e->gz->g1[1]]);
+
+    char m[10];
+    sprintf(m, "%s%s", A[e->gz->g2[0]], B[e->gz->g2[1]]);
+
+    char d[10];
+    sprintf(d, "%s%s", A[e->gz->g3[0]], B[e->gz->g3[1]]);
+
+    char h[10];
+    sprintf(h, "%s%s", A[e->gz->g4[0]], B[e->gz->g4[1]]);
+
+    char i1[10];
+    sprintf(i1, "%s", A[e->i1]);
+
+    char i2[10];
+    sprintf(i2, "%s%s", A[e->i2], B[e->i3]);
+
+    char i3[10];
+    sprintf(i3, "%s", B[e->i4]);
+
+    char k1[10];
+    char k2[10];
+
+    sprintf(k1, "%s", B[e->k1]);
+    sprintf(k2, "%s", B[e->k2]);
+
+    fprintf(jp,
+        "{ \n\t\"gz\": [\"%s\", \"%s\", \"%s\", \"%s\"], \n\t\"st\": [\"%s\", "
+        "\"%s\", "
+        "\"%s\"], \n\t\"kw\": [\"%s\", \"%s\"] \n}\n",
+        y, m, d, h, i1, i2, i3, k1, k2);
+
+    fclose(jp);
+}
+
+// ./app 2021 11 4 11 3 -json 123
 int main(int argc, char **argv) {
     char *input_date = malloc(128);
     char *df = malloc(5);
+    char *fname;
 
-    if (argc == 6) {
+    bool save_json = false;
+
+    if (argc > 1) {
         memset(input_date, 0, 128);
 
         for (int i = 1; i <= 4; i++) {
@@ -374,6 +459,11 @@ int main(int argc, char **argv) {
             }
         }
         memcpy(df, argv[5], 5);
+
+        if (argc == 8) {
+            save_json = strcmp(argv[6], "-json") == 0;
+            fname = argv[7];
+        }
     } else {
         printf("年月日时 yyyy MM dd hh\t\t:\t");
 
@@ -397,16 +487,22 @@ int main(int argc, char **argv) {
     gz *g = parse_1980(d);
 
     env *e = eval(d, q, g, p - 1);
+    e->gz = g;
 
-    printf("\
+    if (save_json) {
+        save(e, fname);
+    } else {
+        printf("\
 干支：%s\n\
 局时：\n\
 \
                %s\n\
-             %s%s                       小干时局（排盘工具）\n\
+             %s%s                       小干时（排盘工具）\n\
                %s\n\
 ",
-        e->date, A[e->i1], A[e->i2], B[e->i3], B[e->i4]);
+            e->date, A[e->i1], A[e->i2], B[e->i3], B[e->i4]);
+    }
+
     free(e->date);
 
     free(input_date);
