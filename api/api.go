@@ -22,6 +22,7 @@ var (
 
 	A = []string{"甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"}
 	B = []string{"子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"}
+	C = []string{"青", "明", "刑", "朱", "匱", "德", "白", "玉", "牢", "玄", "司", "勾"}
 
 	HMap = map[int]int{
 		23: 0,
@@ -214,7 +215,7 @@ func appointDate(t time.Time) []string {
 
 	g = append(g, h)
 
-	i := t.Hour()
+	i := t.Minute()
 	d := 0
 
 	if i < 10 {
@@ -258,18 +259,91 @@ func main() {
 		panic(err)
 	}
 
-	x, y := paipan(time.Now())
-	fmt.Println(x, y)
+	x, y, z := paipan(time.Now())
+	fmt.Printf("%v \n%v \n%v \n%v \n", y, z, x, B)
 }
 
-func paipan(t time.Time) ([]string, []string) {
+func paipan(t time.Time) ([]string, []string, []string) {
 	// t, _ := time.Parse("2006-01-02 15:04", "2021-11-09 22:23")
 	date := appointDate(t)
-	fmt.Println(date)
+	fmt.Println(t.Format("2006-01-02 15:04:05"), date)
 
-	var x, y []string
+	var x, y, z []string
 
-	return x, y
+	for i := 0; i < 12; i++ {
+		x = append(x, " ")
+		y = append(y, " ")
+		z = append(z, " ")
+	}
+
+	a := index(B, string([]rune(date[3])[1]))
+	b := index(B, string([]rune(date[4])))
+	j := a
+
+	for i := 0; i < 12; i++ {
+		x[j] = B[b]
+
+		j += 1
+		b += 1
+
+		if j == 12 {
+			j = 0
+		}
+		if b == 12 {
+			b = 0
+		}
+	}
+
+	p := 0
+
+	switch string([]rune(date[3])[0]) {
+	case "甲":
+		p = 5
+	case "乙":
+		p = 6
+	case "丙":
+		p = 7
+	case "丁":
+		p = 8
+	case "戊":
+		p = 9
+	case "己":
+		p = 0
+	case "庚":
+		p = 1
+	case "辛":
+		p = 2
+	case "壬":
+		p = 3
+	case "癸":
+		p = 4
+	}
+
+	j = a
+	for i := 0; i < 12; i++ {
+		y[j] = A[p]
+
+		j += 1
+		p += 1
+
+		if j == 12 {
+			j = 0
+		}
+		if p == 10 {
+			p = 0
+		}
+	}
+	j = a
+	for i := 0; i < 12; i++ {
+		z[j] = C[i]
+
+		j += 1
+		if j == 12 {
+			j = 0
+		}
+	}
+
+	return x, y, z
 }
 
 func index(p []string, t string) int {
@@ -296,3 +370,24 @@ func peek(s string) string {
 	}
 	return fmt.Sprintf("%s%s", A[i], B[j])
 }
+
+/*
+func stringer(x, y []string) {
+	fmt.Printf(`
+		    %s%s%s%s
+		    %s%s%s%s
+		    巳午未申
+		%s%s辰    酉%s%s
+		%s%s卯    戌%s%s
+		    寅丑子亥
+		    %s%s%s%s
+		    %s%s%s%s
+
+`, y[5], y[6], y[7], y[8], x[5], x[6], x[7], x[8],
+
+		y[4], x[4], x[9], y[9],
+		y[3], x[3], x[10], y[10],
+
+		x[2], x[1], x[0], x[11], y[2], y[1], y[0], y[11])
+}
+*/
